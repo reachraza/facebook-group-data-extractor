@@ -1,0 +1,34 @@
+[facebook]
+# Facebook Credentials (REQUIRED for real extraction)
+# Add your Facebook credentials here
+email = your_email@example.com
+password = your_password_here
+
+[selenium]
+# Selenium WebDriver Settings
+headless_mode = true
+delay_min = 2
+delay_max = 5
+timeout = 10
+
+[scraping]
+# Scraping Configuration
+output_dir = output
+raw_output_file = scraped_data_raw.csv
+
+[logging]
+# Logging Settings
+log_level = INFO
+log_file = extraction.log
+
+[search]
+# Phase 2 - Search Settings
+# Max scroll steps per keyword search (more finds more, but risks detection)
+max_scrolls_per_search = 8
+# Cap number of URLs saved per keyword (0 = no cap)
+max_results_per_keyword = 100
+# Enable detailed enrichment (visits each group page - SLOWER but richer data)
+enable_enrichment = true
+# Keepalive interval during long waits (seconds, 0 = disabled)
+keepalive_interval = 30
+

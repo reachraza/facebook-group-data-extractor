@@ -1,0 +1,14 @@
+# Phase 1: Core Functionality Dependencies
+selenium>=4.15.0
+webdriver-manager>=4.0.0
+
+# Additional dependencies for extended functionality
+pandas>=2.1.0
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+faker>=20.0.0
+python-dotenv>=1.0.0
+lxml>=4.9.0
+openpyxl>=3.1.0
+
+# Note: configparser is part of Python standard library (3.2+)
