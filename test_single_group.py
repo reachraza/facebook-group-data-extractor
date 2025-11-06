@@ -194,11 +194,11 @@ def main():
     driver = get_driver_with_config()
     
     # Login once for all URLs
-    email, password = load_credentials_from_config()
+    email, password, twocaptcha_api_key = load_credentials_from_config()
     login_success = False
     if email and password and validate_credentials(email, password):
         print("\n🔐 Logging in...")
-        login_success = login_to_facebook(driver, email, password)
+        login_success = login_to_facebook(driver, email, password, twocaptcha_api_key)
         if login_success:
             print("✅ Login complete\n")
         else:

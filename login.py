@@ -34,6 +34,9 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException 
 # Third-party imports
 from webdriver_manager.chrome import ChromeDriverManager  # Auto-downloads and manages ChromeDriver binaries
 
+# Captcha solving
+from captcha import FacebookLoginWith2Captcha
+
 
 def get_driver(headless=True):
     """
@@ -180,7 +183,7 @@ def smart_delay(min_delay=2, max_delay=5):
     time.sleep(delay)
 
 
-def login_to_facebook(driver, email, password):
+def login_to_facebook(driver, email, password, twocaptcha_api_key=None):
     """
     Login to Facebook with credentials and establish a persistent session
     
@@ -188,7 +191,8 @@ def login_to_facebook(driver, email, password):
     1. Navigating to the login page
     2. Filling in email and password fields
     3. Clicking the login button
-    4. Verifying successful authentication
+    4. Handling captcha challenges if they appear (using 2Captcha)
+    5. Verifying successful authentication
     
     The session created by this function persists across page navigations,
     allowing the scraper to access member-only content and private groups.
@@ -197,6 +201,7 @@ def login_to_facebook(driver, email, password):
         driver (webdriver.Chrome): Configured Selenium WebDriver instance
         email (str): Facebook account email address
         password (str): Facebook account password
+        twocaptcha_api_key (str, optional): 2Captcha API key for solving captchas
     
     Returns:
         bool: True if login successful and session established
@@ -260,7 +265,43 @@ def login_to_facebook(driver, email, password):
         print("   Waiting for login to complete...")
         smart_delay(5, 8)
         
-        # ========== STEP 5: HANDLE CHECKPOINT/SECURITY PAGES ==========
+        # ========== STEP 5: HANDLE CAPTCHA IF PRESENT ==========
+        # Check if we're on two-step verification page with captcha
+        current_url = driver.current_url.lower()
+        
+        if "two_step_verification" in current_url and twocaptcha_api_key:
+            print("⚠️  Two-step verification with captcha detected")
+            print("   Attempting to solve captcha with 2Captcha...")
+            
+            try:
+                # Create captcha solver instance with existing driver
+                from captcha import FacebookLoginWith2Captcha
+                captcha_solver = FacebookLoginWith2Captcha(twocaptcha_api_key, driver=driver)
+                
+                # Detect and handle captcha
+                captcha_solved = captcha_solver.handle_captcha()
+                
+                if captcha_solved:
+                    print("✓ Captcha solved successfully!")
+                    # Try to submit the verification form
+                    try:
+                        submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+                        submit_button.click()
+                        smart_delay(5, 8)
+                    except:
+                        print("   No submit button found, proceeding...")
+                else:
+                    print("✗ Failed to solve captcha")
+                    return False
+                    
+            except Exception as e:
+                print(f"⚠️  Error during captcha solving: {str(e)}")
+                print("   Proceeding with manual intervention...")
+        elif "two_step_verification" in current_url and not twocaptcha_api_key:
+            print("⚠️  Two-step verification detected but no 2Captcha API key provided")
+            print("   Add twocaptcha_api_key to config.ini to enable automatic captcha solving")
+        
+        # ========== STEP 6: HANDLE CHECKPOINT/SECURITY PAGES ==========
         # Facebook may show checkpoint pages, 2FA, or "Save browser" prompts
         current_url = driver.current_url.lower()
         
@@ -293,7 +334,7 @@ def login_to_facebook(driver, email, password):
         except:
             pass
         
-        # ========== STEP 6: VERIFY LOGIN SUCCESS ==========
+        # ========== STEP 7: VERIFY LOGIN SUCCESS ==========
         # Navigate to homepage to verify session
         try:
             driver.get("https://www.facebook.com")
@@ -413,20 +454,21 @@ def get_driver_with_config():
 
 def load_credentials_from_config():
     """
-    Load Facebook credentials from config.ini configuration file
+    Load Facebook credentials and 2Captcha API key from config.ini configuration file
     
-    Reads email and password from the [facebook] section of config.ini.
+    Reads email, password, and twocaptcha_api_key from the [facebook] section of config.ini.
     Uses interpolation=None to prevent configparser from treating special
     characters (like % in passwords) as configuration variables.
     
     Returns:
-        tuple: (email, password) if credentials found
-               (None, None) if credentials are missing or file not found
+        tuple: (email, password, twocaptcha_api_key) if credentials found
+               (None, None, None) if credentials are missing or file not found
     
     Configuration file structure:
         [facebook]
         email = your_email@example.com
         password = your_password_here
+        twocaptcha_api_key = your_2captcha_api_key (optional)
     """
     # Disable interpolation to handle special characters in passwords
     # Without this, passwords with % or $ would cause parsing errors
@@ -437,11 +479,17 @@ def load_credentials_from_config():
         # Read email and password from [facebook] section
         email = config.get('facebook', 'email', fallback=None)
         password = config.get('facebook', 'password', fallback=None)
+        twocaptcha_api_key = config.get('facebook', 'twocaptcha_api_key', fallback=None)
+        
+        # Clean up empty string values
+        if twocaptcha_api_key == '':
+            twocaptcha_api_key = None
+            
     except (configparser.NoSectionError, configparser.NoOptionError):
         # Config file doesn't have [facebook] section or values are missing
-        return None, None
+        return None, None, None
     
-    return email, password
+    return email, password, twocaptcha_api_key
 
 
 def validate_credentials(email, password):
@@ -543,11 +591,11 @@ if __name__ == "__main__":
         exit(1)
     
     # Try to login if credentials are provided
-    email, password = load_credentials_from_config()
+    email, password, twocaptcha_api_key = load_credentials_from_config()
     
     if email and password and validate_credentials(email, password):
         print("\n🔐 Attempting login...")
-        success = login_to_facebook(driver, email, password)
+        success = login_to_facebook(driver, email, password, twocaptcha_api_key)
         
         if success:
             print("\n📊 Session Information:")

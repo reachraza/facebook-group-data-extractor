@@ -149,11 +149,11 @@ def run_phase2_search() -> bool:
         driver = get_driver_with_config()
 
         # Optional login (recommended for better search results)
-        email, password = load_credentials_from_config()
+        email, password, twocaptcha_api_key = load_credentials_from_config()
         login_success = False
         if email and password and validate_credentials(email, password):
             logging.info("Attempting login for Phase 2 searches...")
-            login_success = login_to_facebook(driver, email, password)
+            login_success = login_to_facebook(driver, email, password, twocaptcha_api_key)
             if login_success:
                 logging.info("Login successful for Phase 2")
             else:
@@ -193,7 +193,7 @@ def run_phase2_search() -> bool:
                     if any(x in body_txt for x in ["log in", "sign up", "create account"]):
                         logging.info("Session likely logged out; attempting re-login...")
                         if email and password and validate_credentials(email, password):
-                            login_success = login_to_facebook(driver, email, password)
+                            login_success = login_to_facebook(driver, email, password, twocaptcha_api_key)
                             logging.info("Re-login %s", "successful" if login_success else "failed")
             except Exception as e:
                 # Session might be dead - try to recover
@@ -206,7 +206,7 @@ def run_phase2_search() -> bool:
                 driver = get_driver_with_config()
                 if email and password and validate_credentials(email, password):
                     logging.info("Attempting re-login with fresh driver...")
-                    login_to_facebook(driver, email, password)
+                    login_to_facebook(driver, email, password, twocaptcha_api_key)
 
             urls = []
             try:
@@ -229,7 +229,7 @@ def run_phase2_search() -> bool:
                 driver = get_driver_with_config()
                 if email and password and validate_credentials(email, password):
                     logging.info("Attempting re-login with fresh driver...")
-                    login_to_facebook(driver, email, password)
+                    login_to_facebook(driver, email, password, twocaptcha_api_key)
                 continue
 
             if search_cfg["max_results"] and len(urls) > search_cfg["max_results"]:

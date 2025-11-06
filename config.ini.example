@@ -3,6 +3,9 @@
 # Add your Facebook credentials here
 email = your_email@example.com
 password = your_password_here
+# 2Captcha API Key (OPTIONAL - for automatic captcha solving)
+# Get your API key from https://2captcha.com
+twocaptcha_api_key = 
 
 [selenium]
 # Selenium WebDriver Settings

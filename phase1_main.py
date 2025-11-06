@@ -146,11 +146,11 @@ def run_phase1_extraction(group_urls=None):
         print("STEP 2: Logging into Facebook")
         print("-" * 60)
         
-        email, password = load_credentials_from_config()
+        email, password, twocaptcha_api_key = load_credentials_from_config()
         login_success = False
         
         if email and password and validate_credentials(email, password):
-            login_success = login_to_facebook(driver, email, password)
+            login_success = login_to_facebook(driver, email, password, twocaptcha_api_key)
             if login_success:
                 print("✅ Login successful - will attempt full data extraction")
             else:
