@@ -15,7 +15,23 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 import configparser
 import os
+import logging
+from logging import log
+from captcha_solver import FacebookCaptchaSolver
 
+log = logging.getLogger(__name__)          # <-- proper logger
+
+# ------------------------------------------------------------------
+# Add a helper that runs after you click “Log In”
+# ------------------------------------------------------------------
+def _handle_captcha(driver, solver: FacebookCaptchaSolver) -> bool:
+    attempts = 3
+    for attempt in range(1, attempts + 1):
+        if solver.solve(driver):
+            return True
+        log.warning(f"Captcha solve attempt {attempt}/{attempts} failed")
+        time.sleep(3)
+    return False
 
 def get_driver(headless=True):
     """
@@ -100,7 +116,7 @@ def smart_delay(min_delay=2, max_delay=5):
     time.sleep(delay)
 
 
-def login_to_facebook(driver, email, password):
+def login_to_facebook(driver, email, password, twocaptcha_api_key: str):
     """
     Login to Facebook with credentials and establish a persistent session
     
@@ -115,6 +131,7 @@ def login_to_facebook(driver, email, password):
     print("🔐 Logging into Facebook...")
     
     try:
+        solver = FacebookCaptchaSolver(twocaptcha_api_key)
         # Navigate to Facebook login
         driver.get("https://www.facebook.com/login")
         smart_delay(2, 4)
@@ -138,9 +155,15 @@ def login_to_facebook(driver, email, password):
         # Click login button
         login_button = driver.find_element(By.NAME, "login")
         login_button.click()
+
+        smart_delay(10, 20)
+        # ----- CAPTCHA handling loop -----
+        if not _handle_captcha(driver, solver):
+            print("CAPTCHA could not be solved – aborting login")
+            return False
         
         # Wait for login to complete
-        smart_delay(3, 6)
+        smart_delay(4, 7)
         
         # Check if login was successful
         if "facebook.com" in driver.current_url and "login" not in driver.current_url:

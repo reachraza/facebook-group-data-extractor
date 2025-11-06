@@ -15,6 +15,8 @@ import configparser
 from datetime import datetime
 from login import get_driver_with_config, login_to_facebook, load_credentials_from_config, validate_credentials
 from scraper import scrape_group_data, scrape_multiple_groups, validate_group_url
+from login import login_to_facebook, load_credentials_from_config
+import time
 
 
 def save_to_raw_csv(data, filename='scraped_data_raw.csv'):
@@ -138,10 +140,12 @@ def run_phase1_extraction(group_urls=None):
         print("-" * 60)
         
         email, password = load_credentials_from_config()
+        twocaptcha_key = config.get('captcha', '2captcha_api_key', fallback=None)
         login_success = False
         
         if email and password and validate_credentials(email, password):
-            login_success = login_to_facebook(driver, email, password)
+            login_success = login_to_facebook(driver, email, password, twocaptcha_key)
+            time.sleep(60)
             if login_success:
                 print("✅ Login successful - will attempt full data extraction")
             else:

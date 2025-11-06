@@ -32,3 +32,5 @@ enable_enrichment = true
 # Keepalive interval during long waits (seconds, 0 = disabled)
 keepalive_interval = 30
 
+[captcha]
+2captcha_api_key = d6e5c610865fded5022c540af9b22fd0
