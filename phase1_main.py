@@ -2,17 +2,26 @@
 Phase 1: Core Functionality & Initial Output
 Facebook Group Data Extractor - Phase 1 Implementation
 
-This module implements:
-1. Environment Setup (config.ini)
-2. Login & Session Management (login.py)
-3. Core Group Scraper (scraper.py)
-4. Basic Data Storage (scraped_data_raw.csv)
+This is the main orchestrator for Phase 1 functionality. It coordinates:
+1. Environment Setup (config.ini) - Loading settings and credentials
+2. Login & Session Management (login.py) - Establishing Facebook session
+3. Core Group Scraper (scraper.py) - Extracting data from group pages
+4. Basic Data Storage (scraped_data_raw.csv) - Saving results to CSV
+
+Usage:
+    python phase1_main.py
+    
+The script reads group URLs from extracted_urls.txt and processes them sequentially.
+Results are saved to output/scraped_data_raw.csv
 """
 
-import os
-import csv
-import configparser
-from datetime import datetime
+# Standard library imports
+import os          # File and directory operations
+import csv         # CSV file reading/writing
+import configparser  # Reading configuration from .ini files
+from datetime import datetime  # Generating timestamps
+
+# Local module imports - Phase 1 core functionality
 from login import get_driver_with_config, login_to_facebook, load_credentials_from_config, validate_credentials
 from scraper import scrape_group_data, scrape_multiple_groups, validate_group_url
 

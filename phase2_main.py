@@ -1,29 +1,45 @@
 """
 Phase 2 Orchestrator - Search, Robustness, Rate Limiting
+Facebook Group Data Extractor - Phase 2 Implementation
 
-This script keeps Phase 1 intact. It:
-1) Generates keywords from resources
-2) Logs in (optional, improves search quality)
-3) Searches Facebook for groups per keyword
-4) Collects unique public group URLs
-5) Saves results and optionally appends to extracted_urls.txt
+This is the main orchestrator for Phase 2 functionality. It implements:
+1. Keyword Generation (input_processor.py) - Creates search terms from Excel/CSV files
+2. Facebook Group Search (search.py) - Executes searches and finds group URLs
+3. Rate Limiting - Adds delays to avoid detection and IP bans
+4. Error Handling & Logging - Comprehensive logging to extraction.log
+5. Data Enrichment (scraper.py) - Optionally scrapes full group details
+
+Key Features:
+- Searches Facebook for groups based on generated keywords
+- Collects unique public group URLs
+- Optional data enrichment for member counts and descriptions
+- Session management with periodic re-login
+- Saves results to output/search_results_TIMESTAMP.csv
+
+Usage:
+    python phase2_main.py
+    
+The script processes keywords from Resources/All Teams by Sport.xlsx
+and saves results with timestamps.
 """
 
 from __future__ import annotations
 
-import os
-import sys
-import csv
-import time
-import logging
-from datetime import datetime
-from configparser import ConfigParser
-from typing import List, Set
+# Standard library imports
+import os          # File and directory operations
+import sys         # System-specific parameters
+import csv         # CSV file operations
+import time        # Adding delays and timestamps
+import logging     # Comprehensive logging functionality
+from datetime import datetime  # Timestamp generation
+from configparser import ConfigParser  # Configuration file reading
+from typing import List, Set  # Type hints for better code documentation
 
+# Local module imports - Phase 2 functionality
 from login import get_driver_with_config, login_to_facebook, load_credentials_from_config, validate_credentials
-from scraper import scrape_group_data
-from search import find_group_urls
-from input_processor import generate_keywords_from_resources
+from scraper import scrape_group_data  # Data enrichment functionality
+from search import find_group_urls  # Facebook group search
+from input_processor import generate_keywords_from_resources  # Keyword generation
 
 
 def _setup_logging(log_level: str, log_file: str) -> None:
@@ -246,6 +262,10 @@ def run_phase2_search() -> bool:
                                 record["admin_names"] = details.get("admin_names")
                             if details.get("admin_profile_urls"):
                                 record["admin_profile_urls"] = details.get("admin_profile_urls")
+                            if details.get("member_names"):
+                                record["member_names"] = details.get("member_names")
+                            if details.get("member_profile_urls"):
+                                record["member_profile_urls"] = details.get("member_profile_urls")
                     except Exception as e:
                         logging.warning(f"Could not enrich details for {u}: {e}")
 

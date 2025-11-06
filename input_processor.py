@@ -1,18 +1,38 @@
 """
 Phase 2 - Keyword Generation (Input Strategy)
+Keyword Generation Module for Facebook Group Search
 
-Generates search keywords from provided resource files. Supports:
-- Excel (.xlsx) via pandas/openpyxl if available
+Purpose:
+- Read team/sport data from Excel (.xlsx) or CSV files
+- Generate search keywords based on patterns
+- Normalize and deduplicate keywords
+
+Input Sources:
+- Excel files (.xlsx) via pandas/openpyxl
 - CSV files
+- Fallback to minimal static list if no files found
 
-Falls back to a minimal static list if no parsable inputs found.
+Keyword Patterns Generated:
+For each team name found in input files:
+- "{Team} Tickets" - e.g., "Arizona Cardinals Tickets"
+- "{Team} Ticket Exchange" - e.g., "Atlanta Falcons Ticket Exchange"
+- "{Team} Verified Tickets" - e.g., "Baltimore Ravens Verified Tickets"
+- "{Team} Official Tickets" - e.g., "Buffalo Bills Official Tickets"
+
+Workflow:
+1. Scan Resources directory for Excel/CSV files
+2. Extract team names from all cells
+3. Normalize (strip whitespace, lowercase for dedup)
+4. Apply keyword patterns to each team
+5. Return deduplicated keyword list
 """
 
 from __future__ import annotations
 
-import os
-import csv
-from typing import List, Iterable
+# Standard library imports
+import os     # File and directory operations
+import csv    # CSV file reading
+from typing import List, Iterable  # Type hints
 
 
 def _load_xlsx_keywords(xlsx_path: str) -> List[str]:
@@ -119,5 +139,6 @@ def generate_keywords_from_resources(resources_dir: str = "Resources") -> List[s
 __all__ = [
     "generate_keywords_from_resources",
 ]
+
 
 

@@ -1,22 +1,41 @@
 """
 Phase 2 - Search Integration and Rate Limiting
+Facebook Group Search Module
 
-Provides functionality to find public Facebook group URLs by keyword, with
-bounded scrolling, rate limiting, and defensive selectors.
+Purpose:
+- Execute Facebook group searches based on keywords
+- Scrape search results and extract unique group URLs
+- Implement rate limiting and human-like delays
+- Filter and validate extracted URLs
+
+Key Features:
+- Scrolling through search results to load more groups
+- URL normalization and validation
+- Automatic dismissal of login/cookie overlays
+- Retry logic for transient network failures
+- Strict filtering to exclude non-group URLs
+
+Workflow:
+1. Navigate to Facebook search URL with encoded keyword
+2. Scroll through results while collecting group URLs
+3. Normalize and validate each URL
+4. Return deduplicated list of valid group URLs
 """
 
 from __future__ import annotations
 
-import os
-import time
-import random
-import logging
-import urllib.parse
-from typing import List, Set
+# Standard library imports
+import os              # OS-level operations
+import time            # Adding delays between actions
+import random          # Randomizing delays for human-like behavior
+import logging         # Logging search progress and errors
+import urllib.parse    # URL encoding and parsing
+from typing import List, Set  # Type hints
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+# Selenium WebDriver imports
+from selenium.webdriver.common.by import By  # Locator strategies
+from selenium.webdriver.support.ui import WebDriverWait  # Wait for elements
+from selenium.webdriver.support import expected_conditions as EC  # Expected conditions
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 
 
